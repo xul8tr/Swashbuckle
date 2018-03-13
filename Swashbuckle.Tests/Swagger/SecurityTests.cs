@@ -13,7 +13,7 @@ namespace Swashbuckle.Tests.SwaggerFilters
     public class SecurityTests : SwaggerTestBase
     {
         public SecurityTests()
-            : base("swagger/docs/{apiVersion}")
+            : base("swagger/docs/{*documentName}")
         {
         }
 

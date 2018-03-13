@@ -1,14 +1,12 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Net.Http.Formatting;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System.Collections.Generic;
 using Swashbuckle.Swagger;
-using System.Net;
 
 namespace Swashbuckle.Application
 {
@@ -25,15 +23,15 @@ namespace Swashbuckle.Application
         {
             var swaggerProvider = _config.GetSwaggerProvider(request);
             var rootUrl = _config.GetRootUrl(request);
-            var apiVersion = request.GetRouteData().Values["apiVersion"].ToString();
+            var documentName = request.GetRouteData().Values["documentName"].ToString();
 
             try
             {
-                var swaggerDoc = swaggerProvider.GetSwagger(rootUrl, apiVersion);
+                var swaggerDoc = swaggerProvider.GetSwagger(rootUrl, documentName);
                 var content = ContentFor(request, swaggerDoc);
                 return TaskFor(new HttpResponseMessage { Content = content });
             }
-            catch (UnknownApiVersion ex)
+            catch (UnknownDocumentException ex)
             {
                 return TaskFor(request.CreateErrorResponse(HttpStatusCode.NotFound, ex));
             }
@@ -59,7 +57,7 @@ namespace Swashbuckle.Application
                 }
             };
             // NOTE: The custom converter would not be neccessary in Newtonsoft.Json >= 5.0.5 as JsonExtensionData
-            // provides similar functionality. But, need to stick with older version for WebApi 5.0.0 compatibility 
+            // provides similar functionality. But, need to stick with older version for WebApi 5.0.0 compatibility
             return new[] { jsonFormatter };
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Web.Http;
 using Swashbuckle.Application;
+using Swashbuckle.Swagger;
 
 namespace Swashbuckle.Tests.Owin
 {
@@ -16,7 +17,7 @@ namespace Swashbuckle.Tests.Owin
 
             // configure swagger as well on separate URL
             config
-                .EnableSwagger("docs/{apiVersion}/.metadata", c => c.SingleApiVersion("v1", "A title for your API"))
+                .EnableSwagger("docs/{documentName}/.metadata", c => c.SwaggerDoc("v1", new Info { version = "v1", title = "A title for your API" }))
                 .EnableSwaggerUi("docs-ui/{*assetPath}");
         }
     }

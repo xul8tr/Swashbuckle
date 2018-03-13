@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Web.Http;
-using Newtonsoft.Json;
 using Swashbuckle.Application;
-using Swashbuckle.Swagger;
-using NUnit.Framework;
 
 namespace Swashbuckle.Tests.Swagger
 {
@@ -16,12 +12,18 @@ namespace Swashbuckle.Tests.Swagger
         protected void SetUpHandler(Action<SwaggerDocsConfig> configure = null)
         {
             var swaggerDocsConfig = new SwaggerDocsConfig();
-            swaggerDocsConfig.SingleApiVersion("v1", "Test API");
+			swaggerDocsConfig.SwaggerDoc("v1", (i) => i.Version("v1").Title("Test API"));
+			configure?.Invoke(swaggerDocsConfig);
 
-            if (configure != null)
-                configure(swaggerDocsConfig);
-
-            Handler = new SwaggerDocsHandler(swaggerDocsConfig);
+			Handler = new SwaggerDocsHandler(swaggerDocsConfig);
         }
-    }
+
+		protected void SetUpHandlerWithoutDoc(Action<SwaggerDocsConfig> configure = null)
+		{
+			var swaggerDocsConfig = new SwaggerDocsConfig();
+			configure?.Invoke(swaggerDocsConfig);
+
+			Handler = new SwaggerDocsHandler(swaggerDocsConfig);
+		}
+	}
 }

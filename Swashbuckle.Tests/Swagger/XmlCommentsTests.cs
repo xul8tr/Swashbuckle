@@ -14,7 +14,7 @@ namespace Swashbuckle.Tests.Swagger
     public class XmlCommentsTests : SwaggerTestBase
     {
         public XmlCommentsTests()
-            : base("swagger/docs/{apiVersion}")
+            : base("swagger/docs/{*documentName}")
         {
         }
 

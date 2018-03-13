@@ -8,7 +8,7 @@ namespace Swashbuckle.Tests.Swagger
     public class FromUriParamsTests : SwaggerTestBase
     {
         public FromUriParamsTests()
-            : base("swagger/docs/{apiVersion}")
+            : base("swagger/docs/{*documentName}")
         { }
 
         [SetUp]

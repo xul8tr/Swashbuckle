@@ -8,7 +8,7 @@ namespace Swashbuckle.Swagger
     public class SwaggerGeneratorOptions
     {
         public SwaggerGeneratorOptions(
-            Func<ApiDescription, string, bool> versionSupportResolver = null,
+			Func<string, Info, ApiDescription, bool> docInclusionPredicate = null,
             IEnumerable<string> schemes = null,
             IDictionary<string, SecurityScheme> securityDefinitions = null,
             bool ignoreObsoleteActions = false,
@@ -18,16 +18,15 @@ namespace Swashbuckle.Swagger
             IEnumerable<ISchemaFilter> schemaFilters = null,
             IEnumerable<IModelFilter> modelFilters = null,
             bool ignoreObsoleteProperties = false,
-            Func<Type, string> schemaIdSelector = null, 
+            Func<Type, string> schemaIdSelector = null,
             bool describeAllEnumsAsStrings = false,
             bool describeStringEnumsInCamelCase = false,
-            bool applyFiltersToAllSchemas = false,
             IEnumerable<IOperationFilter> operationFilters = null,
             IEnumerable<IDocumentFilter> documentFilters = null,
             Func<IEnumerable<ApiDescription>, ApiDescription> conflictingActionsResolver = null
             )
         {
-            VersionSupportResolver = versionSupportResolver;
+			DocInclusionPredicate = docInclusionPredicate;
             Schemes = schemes;
             SecurityDefinitions = securityDefinitions;
             IgnoreObsoleteActions = ignoreObsoleteActions;
@@ -40,13 +39,12 @@ namespace Swashbuckle.Swagger
             SchemaIdSelector = schemaIdSelector ?? DefaultSchemaIdSelector;
             DescribeAllEnumsAsStrings = describeAllEnumsAsStrings;
             DescribeStringEnumsInCamelCase = describeStringEnumsInCamelCase;
-            ApplyFiltersToAllSchemas = applyFiltersToAllSchemas;
             OperationFilters = operationFilters ?? new List<IOperationFilter>();
             DocumentFilters = documentFilters ?? new List<IDocumentFilter>();
             ConflictingActionsResolver = conflictingActionsResolver ?? DefaultConflictingActionsResolver;
         }
 
-        public Func<ApiDescription, string, bool> VersionSupportResolver { get; private set; }
+		public Func<string, Info, ApiDescription, bool> DocInclusionPredicate { get; private set; }
 
         public IEnumerable<string> Schemes { get; private set; }
 
@@ -71,8 +69,6 @@ namespace Swashbuckle.Swagger
         public bool DescribeAllEnumsAsStrings { get; private set; }
 
         public bool DescribeStringEnumsInCamelCase { get; private set; }
-
-        public bool ApplyFiltersToAllSchemas { get; private set; }
 
         public IEnumerable<IOperationFilter> OperationFilters { get; private set; }
 

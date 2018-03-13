@@ -16,8 +16,8 @@ namespace Swashbuckle.Application
 {
     public class SwaggerDocsConfig
     {
-        private VersionInfoBuilder _versionInfoBuilder;
-        private Func<ApiDescription, string, bool> _versionSupportResolver;
+		private IDictionary<string, Info> _swaggerDocs;
+		private Func<string, Info, ApiDescription, bool> _docInclusionPredicate;
         private IEnumerable<string> _schemes;
         private IDictionary<string, SecuritySchemeBuilder> _securitySchemeBuilders;
         private bool _prettyPrint;
@@ -31,7 +31,6 @@ namespace Swashbuckle.Application
         private bool _ignoreObsoleteProperties;
         private bool _describeAllEnumsAsStrings;
         private bool _describeStringEnumsInCamelCase;
-        private bool _applyFiltersToAllSchemas;
         private readonly IList<Func<IOperationFilter>> _operationFilters;
         private readonly IList<Func<IDocumentFilter>> _documentFilters;
         private readonly IList<Func<XPathDocument>> _xmlDocFactories;
@@ -42,7 +41,7 @@ namespace Swashbuckle.Application
 
         public SwaggerDocsConfig()
         {
-            _versionInfoBuilder = new VersionInfoBuilder();
+			_swaggerDocs = new Dictionary<string, Info>();
             _securitySchemeBuilders = new Dictionary<string, SecuritySchemeBuilder>();
             _prettyPrint = false;
             _ignoreObsoleteActions = false;
@@ -52,7 +51,6 @@ namespace Swashbuckle.Application
             _ignoreObsoleteProperties = false;
             _describeAllEnumsAsStrings = false;
             _describeStringEnumsInCamelCase = false;
-            _applyFiltersToAllSchemas = false;
             _operationFilters = new List<Func<IOperationFilter>>();
             _documentFilters = new List<Func<IDocumentFilter>>();
             _xmlDocFactories = new List<Func<XPathDocument>>();
@@ -66,23 +64,55 @@ namespace Swashbuckle.Application
             OperationFilter<ApplySwaggerOperationFilterAttributes>();
         }
 
-        public InfoBuilder SingleApiVersion(string version, string title)
-        {
-            _versionSupportResolver = null;
-            _versionInfoBuilder = new VersionInfoBuilder();
-            return _versionInfoBuilder.Version(version, title);
-        }
+		/// <summary>
+		/// Define a document to be created by the Swagger generator
+		/// </summary>
+		/// <param name="version">Version for the document</param>
+		/// <param name="title">Title for the document</param>
+		/// <param name="configure">An optional method for configuring the Info instance for the document</param>
+		public void SwaggerDoc(string version, string title, Action<InfoBuilder> configure = null)
+		{
+			var infoBuilder = new InfoBuilder()
+				.Version(version)
+				.Title(title);
+			configure?.Invoke(infoBuilder);
+			_swaggerDocs.Add(version, infoBuilder.Build());
+		}
 
-        public void MultipleApiVersions(
-            Func<ApiDescription, string, bool> versionSupportResolver,
-            Action<VersionInfoBuilder> configure)
-        {
-            _versionSupportResolver = versionSupportResolver;
-            _versionInfoBuilder = new VersionInfoBuilder();
-            configure(_versionInfoBuilder);
-        }
+		/// <summary>
+		/// Define a document to be created by the Swagger generator
+		/// </summary>
+		/// <param name="name">A URI-friendly name that uniquely identifies the document</param>
+		/// <param name="info">Global metadata to be included in the Swagger output</param>
+		public void SwaggerDoc(string name, Info info)
+		{
+			_swaggerDocs.Add(name, info);
+		}
 
-        public void Schemes(IEnumerable<string> schemes)
+		/// <summary>
+		/// Define a document to be created by the Swagger generator
+		/// </summary>
+		/// <param name="name">A URI-friendly name that uniquely identifies the document</param>
+		/// <param name="configure">A method for configuring the Info instance for the document</param>
+		public void SwaggerDoc(string name, Action<InfoBuilder> configure = null)
+		{
+			var infoBuilder = new InfoBuilder();
+			configure?.Invoke(infoBuilder);
+			_swaggerDocs.Add(name, infoBuilder.Build());
+		}
+
+		/// <summary>
+		/// Provide a custom strategy for selecting actions.
+		/// </summary>
+		/// <param name="predicate">
+		/// A lambda that returns true/false based on document name, Info, and ApiDescription
+		/// </param>
+		public void DocInclusionPredicate(Func<string, Info, ApiDescription, bool> predicate)
+		{
+			_docInclusionPredicate = predicate;
+		}
+
+		public void Schemes(IEnumerable<string> schemes)
         {
             _schemes = schemes;
         }
@@ -138,7 +168,7 @@ namespace Swashbuckle.Application
             _customSchemaMappings.Add(type, factory);
         }
 
-        public void SchemaFilter<TFilter>()
+		public void SchemaFilter<TFilter>()
             where TFilter : ISchemaFilter, new()
         {
             SchemaFilter(() => new TFilter());
@@ -181,12 +211,6 @@ namespace Swashbuckle.Application
         public void IgnoreObsoleteProperties()
         {
             _ignoreObsoleteProperties = true;
-        }
-
-        [Obsolete("This will be removed in 6.0.0; it will always be true.")]
-        public void ApplyFiltersToAllSchemas()
-        {
-            _applyFiltersToAllSchemas = true;
         }
 
         public void OperationFilter<TFilter>()
@@ -256,7 +280,7 @@ namespace Swashbuckle.Application
             }
 
             var options = new SwaggerGeneratorOptions(
-                versionSupportResolver: _versionSupportResolver,
+                docInclusionPredicate: _docInclusionPredicate,
                 schemes: _schemes,
                 securityDefinitions: securityDefintitions,
                 ignoreObsoleteActions: _ignoreObsoleteActions,
@@ -269,7 +293,6 @@ namespace Swashbuckle.Application
                 schemaIdSelector: _schemaIdSelector,
                 describeAllEnumsAsStrings: _describeAllEnumsAsStrings,
                 describeStringEnumsInCamelCase: _describeStringEnumsInCamelCase,
-                applyFiltersToAllSchemas: _applyFiltersToAllSchemas,
                 operationFilters: operationFilters,
                 documentFilters: _documentFilters.Select(factory => factory()).ToList(),
                 conflictingActionsResolver: _conflictingActionsResolver
@@ -278,7 +301,7 @@ namespace Swashbuckle.Application
             var defaultProvider = new SwaggerGenerator(
                 httpConfig.Services.GetApiExplorer(),
                 httpConfig.SerializerSettingsOrDefault(),
-                _versionInfoBuilder.Build(),
+				_swaggerDocs,
                 options);
 
             return (_customProviderFactory != null)
@@ -286,20 +309,11 @@ namespace Swashbuckle.Application
                 : defaultProvider;
         }
 
-        internal string GetRootUrl(HttpRequestMessage swaggerRequest)
-        {
-            return _rootUrlResolver(swaggerRequest);
-        }
+		internal string GetRootUrl(HttpRequestMessage swaggerRequest) => _rootUrlResolver(swaggerRequest);
 
-        internal IEnumerable<string> GetApiVersions()
-        {
-            return _versionInfoBuilder.Build().Select(entry => entry.Key);
-        }
+		internal IDictionary<string, Info> GetSwaggerDocs() => _swaggerDocs;
 
-        internal Formatting GetFormatting()
-        {
-            return _prettyPrint ? Formatting.Indented : Formatting.None;
-        }
+        internal Formatting GetFormatting() => _prettyPrint ? Formatting.Indented : Formatting.None;
 
         public static string DefaultRootUrlResolver(HttpRequestMessage request)
         {
@@ -316,10 +330,6 @@ namespace Swashbuckle.Application
             return urb.Uri.AbsoluteUri.TrimEnd('/');
         }
 
-        private static string GetHeaderValue(HttpRequestMessage request, string headerName)
-        {
-            IEnumerable<string> list;
-            return request.Headers.TryGetValues(headerName, out list) ? list.FirstOrDefault() : null;
-        }
+        private static string GetHeaderValue(HttpRequestMessage request, string headerName) => request.Headers.TryGetValues(headerName, out IEnumerable<string> list) ? list.FirstOrDefault() : null;
     }
 }

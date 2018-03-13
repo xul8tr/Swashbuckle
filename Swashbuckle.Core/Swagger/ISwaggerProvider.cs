@@ -4,13 +4,14 @@ namespace Swashbuckle.Swagger
 {
     public interface ISwaggerProvider
     {
-        SwaggerDocument GetSwagger(string rootUrl, string apiVersion);
+        SwaggerDocument GetSwagger(string rootUrl, string name);
     }
 
-    public class UnknownApiVersion : Exception
+    public class UnknownDocumentException : Exception
     {
-        public UnknownApiVersion(string apiVersion)
-            : base(String.Format("Unknown API version - {0}", apiVersion))
-        {}
+        public UnknownDocumentException(string name)
+            : base($"Unknown document - {name}")
+        {
+		}
     }
 }

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Linq;
 using NUnit.Framework;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Swashbuckle.Dummy.Controllers;
-using Swashbuckle.Application;
 using Swashbuckle.Swagger;
 using Swashbuckle.Dummy.SwaggerExtensions;
 using Swashbuckle.Dummy.Types;
@@ -17,7 +15,7 @@ namespace Swashbuckle.Tests.Swagger
     public class SchemaTests : SwaggerTestBase
     {
         public SchemaTests()
-            : base("swagger/docs/{apiVersion}")
+            : base("swagger/docs/{*documentName}")
         { }
 
         [SetUp]
@@ -146,7 +144,7 @@ namespace Swashbuckle.Tests.Swagger
         public void It_provides_validation_properties_for_annotated_types()
         {
             SetUpDefaultRouteFor<AnnotatedTypesController>();
-            
+
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
             var definitions = swagger["definitions"];
             Assert.IsNotNull(definitions);
@@ -273,7 +271,7 @@ namespace Swashbuckle.Tests.Swagger
             SetUpDefaultRouteFor<JsonAnnotatedTypesController>();
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
-            
+
             var definitions = swagger["definitions"];
             Assert.IsNotNull(definitions);
 
@@ -353,7 +351,6 @@ namespace Swashbuckle.Tests.Swagger
             {
                 c.MapType<Guid>(() => new Schema { type = "string", format = "guid" }); // map format to guid instead of uuid
                 c.SchemaFilter<ApplySchemaVendorExtensions>();
-                c.ApplyFiltersToAllSchemas();
             });
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
@@ -435,7 +432,6 @@ namespace Swashbuckle.Tests.Swagger
                     c.DescribeAllEnumsAsStrings();
                 }
                 c.SchemaFilter<ApplySchemaVendorExtensions>();
-                c.ApplyFiltersToAllSchemas();
             });
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
@@ -529,7 +525,6 @@ namespace Swashbuckle.Tests.Swagger
                     c.DescribeAllEnumsAsStrings();
                 }
                 c.SchemaFilter<ApplySchemaVendorExtensions>();
-                c.ApplyFiltersToAllSchemas();
             });
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
@@ -728,12 +723,12 @@ namespace Swashbuckle.Tests.Swagger
                     //ListOfSelf = new
                     //{
                     //    type = "array",
-                    //    items = JObject.Parse("{ $ref: \"ListOfSelf\" }") 
+                    //    items = JObject.Parse("{ $ref: \"ListOfSelf\" }")
                     //},
                     DictionaryOfSelf = new
                     {
                         type = "object",
-                        additionalProperties = JObject.Parse("{ $ref: \"#/definitions/DictionaryOfSelf\" }") 
+                        additionalProperties = JObject.Parse("{ $ref: \"#/definitions/DictionaryOfSelf\" }")
                     }
                 });
             Assert.AreEqual(expected.ToString(), definitions.ToString());
@@ -750,7 +745,7 @@ namespace Swashbuckle.Tests.Swagger
             var expected = JObject.FromObject(new
                 {
                     type = "array",
-                    items = new 
+                    items = new
                     {
                         type = "array",
                         items = new
@@ -782,8 +777,8 @@ namespace Swashbuckle.Tests.Swagger
                             {
                                 Name = new
                                 {
-                                    type = "string" 
-                                } 
+                                    type = "string"
+                                }
                             }
                         }
                     }

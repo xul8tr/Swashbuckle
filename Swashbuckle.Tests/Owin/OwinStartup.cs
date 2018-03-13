@@ -5,6 +5,7 @@ using System.Web.Http.Dispatcher;
 using System.Web.Http.Routing;
 using Owin;
 using Swashbuckle.Application;
+using Swashbuckle.Swagger;
 
 namespace Swashbuckle.Tests.Owin
 {
@@ -16,7 +17,7 @@ namespace Swashbuckle.Tests.Owin
         /// <summary>
         /// When developing, it is quicker to run tests scoped to just a list of controllers.
         /// When running tests in CI, set this to true.
-        /// 
+        ///
         /// Setting this to true ensures that swagger config generation is tested to work in tandem with all controllers,
         /// not just scoped to single controllers.
         /// </summary>
@@ -61,7 +62,7 @@ namespace Swashbuckle.Tests.Owin
         protected virtual void EnableSwagger(HttpConfiguration config)
         {
             config
-                .EnableSwagger(c => c.SingleApiVersion("v1", "A title for your API"))
+                .EnableSwagger(c => c.SwaggerDoc("v1", new Info { version = "v1", title = "A title for your API" }))
                 .EnableSwaggerUi();
         }
 

@@ -11,7 +11,7 @@ namespace Swashbuckle.Tests.Swagger
     public class AnnotationsTests : SwaggerTestBase
     {
         public AnnotationsTests()
-            : base("swagger/docs/{apiVersion}")
+            : base("swagger/docs/{*documentName}")
         {
         }
 
@@ -47,7 +47,7 @@ namespace Swashbuckle.Tests.Swagger
             var xProp = swagger["paths"]["/products"]["get"]["responses"]["200"]["x-foo"];
 
             Assert.IsNotNull(xProp);
-            Assert.AreEqual("bar", xProp.ToString());            
+            Assert.AreEqual("bar", xProp.ToString());
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace Swashbuckle.Tests.Swagger
                             schema = new
                             {
                                 type = "array",
-                                items = JObject.Parse("{ $ref: \"#/definitions/Message\" }") 
+                                items = JObject.Parse("{ $ref: \"#/definitions/Message\" }")
                             }
                         }
                     },

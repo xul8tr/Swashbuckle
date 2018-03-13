@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Linq;
-using System.Net.Http;
 using System.Web.Http;
-using System.Collections.Generic;
 using System.Web.Http.Description;
 using System.Web.Http.Routing.Constraints;
 using Swashbuckle.Application;
 using Swashbuckle.Swagger;
-using Swashbuckle.Dummy.Controllers;
 using Swashbuckle.Dummy.SwaggerExtensions;
 using Swashbuckle.Dummy.App_Start;
 
@@ -19,7 +16,7 @@ namespace Swashbuckle.Dummy
         {
             var thisAssembly = typeof(SwaggerConfig).Assembly;
 
-            httpConfig 
+            httpConfig
                 .EnableSwagger(c =>
                     {
                         // By default, the service root url is inferred from the request used to access the docs.
@@ -34,11 +31,12 @@ namespace Swashbuckle.Dummy
                         //
                         c.Schemes(new[] { "http", "https" });
 
-                        // Use "SingleApiVersion" to describe a single version API. Swagger 2.0 includes an "Info" object to
-                        // hold additional metadata for an API. Version and title are required but you may also provide the
-                        // additional fields.
-                        //
-                        c.SingleApiVersion("v1", "Swashbuckle Dummy")
+						// Use "SwaggerDoc" to describe an API. Swagger 2.0 includes an "Info" object to
+						// hold additional metadata for an API.
+						//
+						c.SwaggerDoc("v1", i => i
+							.Version("v1")
+							.Title("Swashbuckle Dummy")
                             .Description("A sample API for testing and prototyping Swashbuckle features")
                             .TermsOfService("Some terms")
                             .Contact(cc => cc
@@ -47,31 +45,34 @@ namespace Swashbuckle.Dummy
                                 .Email("some.contact@tempuri.org"))
                             .License(lc => lc
                                 .Name("Some License")
-                                .Url("http://tempuri.org/license"));
+                                .Url("http://tempuri.org/license")));
 
-                        // If your API has multiple versions, use "MultipleApiVersions" instead of "SingleApiVersion".
-                        // In this case, you must provide a lambda that tells Swashbuckle which actions should be
-                        // included in the docs for a given API version. Like "SingleApiVersion", each call to "Version"
-                        // returns an "Info" builder so you can provide additional metadata per API version.
-                        //
-                        //c.MultipleApiVersions(
-                        //    (apiDesc, targetApiVersion) => ResolveVersionSupportByRouteConstraint(apiDesc, targetApiVersion),
-                        //    (vc) =>
-                        //    {
-                        //        vc.Version("v2", "Swashbuckle Dummy API V2");
-                        //        vc.Version("v1", "Swashbuckle Dummy API V1");
-                        //    });
+						// If your API has multiple versions, call SwaggerDoc for each version.
+						// In this case, you must provide a lambda that tells Swashbuckle which actions should be
+						// included in the docs for a given API version.
+						//
+						//c.DocInclusionPredicate(ResolveVersionSupportByRouteConstraint);
+						//c.SwaggerDoc("v2", new Info
+						//{
+						//	version = "v2",
+						//	title = "Swashbuckle Dummy API V2"
+						//});
+						//c.SwaggerDoc("v1", new Info
+						//{
+						//	version = "v1",
+						//	title = "Swashbuckle Dummy API V1"
+						//});
 
-                        // You can use "BasicAuth", "ApiKey" or "OAuth2" options to describe security schemes for the API.
-                        // See https://github.com/swagger-api/swagger-spec/blob/master/versions/V2.md for more details.
-                        // NOTE: These only define the schemes and need to be coupled with a corresponding "security" property
-                        // at the document or operation level to indicate which schemes are required for an operation. To do this,
-                        // you'll need to implement a custom IDocumentFilter and/or IOperationFilter to set these properties
-                        // according to your specific authorization implementation
-                        //
-                        //c.BasicAuth("basic")
-                        //    .Description("Basic HTTP Authentication");
-                        //
+						// You can use "BasicAuth", "ApiKey" or "OAuth2" options to describe security schemes for the API.
+						// See https://github.com/swagger-api/swagger-spec/blob/master/versions/V2.md for more details.
+						// NOTE: These only define the schemes and need to be coupled with a corresponding "security" property
+						// at the document or operation level to indicate which schemes are required for an operation. To do this,
+						// you'll need to implement a custom IDocumentFilter and/or IOperationFilter to set these properties
+						// according to your specific authorization implementation
+						//
+						//c.BasicAuth("basic")
+						//    .Description("Basic HTTP Authentication");
+						//
 						// NOTE: You must also configure 'EnableApiKeySupport' below in the SwaggerUI section
 						//c.ApiKey("apiKey")
 						//	.Description("API Key Authentication")
@@ -141,18 +142,18 @@ namespace Swashbuckle.Dummy
 
                         // Alternatively, you can provide your own custom strategy for inferring SchemaId's for
                         // describing "complex" types in your API.
-                        //  
+                        //
                         c.SchemaId(t => t.FullName.Contains('`') ? t.FullName.Substring(0, t.FullName.IndexOf('`')) : t.FullName);
 
                         // Set this flag to omit schema property descriptions for any type properties decorated with the
-                        // Obsolete attribute 
+                        // Obsolete attribute
                         c.IgnoreObsoleteProperties();
 
                         // In accordance with the built in JsonSerializer, Swashbuckle will, by default, describe enums as integers.
-                        // You can change the serializer behavior by configuring the StringToEnumConverter globally or for a given 
+                        // You can change the serializer behavior by configuring the StringToEnumConverter globally or for a given
                         // enum type. Swashbuckle will honor this change out-of-the-box. However, if you use a different
                         // approach to serialize enums as strings, you can also force Swashbuckle to describe them as strings.
-                        // 
+                        //
                         c.DescribeAllEnumsAsStrings();
 
                         // Similar to Schema filters, Swashbuckle also supports Operation and Document filters:
@@ -183,7 +184,7 @@ namespace Swashbuckle.Dummy
                         // In contrast to WebApi, Swagger 2.0 does not include the query string component when mapping a URL
                         // to an action. As a result, Swashbuckle will raise an exception if it encounters multiple actions
                         // with the same path (sans query string) and HTTP method. You can workaround this by providing a
-                        // custom strategy to pick a winner or merge the descriptions for the purposes of the Swagger docs 
+                        // custom strategy to pick a winner or merge the descriptions for the purposes of the Swagger docs
                         //
                         c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 
@@ -250,7 +251,7 @@ namespace Swashbuckle.Dummy
                         );
 
                         // If your API supports ApiKey, you can override the default values.
-                        // "apiKeyIn" can either be "query" or "header"                                                
+                        // "apiKeyIn" can either be "query" or "header"
                         //
                         //c.EnableApiKeySupport("apiKey", "header");
                     });
@@ -261,15 +262,15 @@ namespace Swashbuckle.Dummy
             return String.Format(@"{0}\XmlComments.xml", AppDomain.CurrentDomain.BaseDirectory);
         }
 
-        public static bool ResolveVersionSupportByRouteConstraint(ApiDescription apiDesc, string targetApiVersion)
+        public static bool ResolveVersionSupportByRouteConstraint(string targetName, Info targetInfo, ApiDescription apiDesc)
         {
-            var versionConstraint = (apiDesc.Route.Constraints.ContainsKey("apiVersion"))
-                ? apiDesc.Route.Constraints["apiVersion"] as RegexRouteConstraint
+            var documentNameConstraint = (apiDesc.Route.Constraints.ContainsKey("documentName"))
+                ? apiDesc.Route.Constraints["documentName"] as RegexRouteConstraint
                 : null;
 
-            return (versionConstraint == null)
+            return (documentNameConstraint == null)
                 ? false
-                : versionConstraint.Pattern.Split('|').Contains(targetApiVersion);
+                : documentNameConstraint.Pattern.Split('|').Contains(targetInfo.version);
         }
     }
 }

@@ -1,18 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Dynamic;
 using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Web.Http;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Converters;
-using System.Net.Http.Formatting;
 
 namespace Swashbuckle.Swagger
 {
@@ -26,7 +17,6 @@ namespace Swashbuckle.Swagger
         private readonly bool _ignoreObsoleteProperties;
         private readonly bool _describeAllEnumsAsStrings;
         private readonly bool _describeStringEnumsInCamelCase;
-        private readonly bool _applyFiltersToAllSchemas;
 
         private readonly IContractResolver _contractResolver;
 
@@ -46,8 +36,7 @@ namespace Swashbuckle.Swagger
             bool ignoreObsoleteProperties,
             Func<Type, string> schemaIdSelector,
             bool describeAllEnumsAsStrings,
-            bool describeStringEnumsInCamelCase,
-            bool applyFiltersToAllSchemas)
+            bool describeStringEnumsInCamelCase)
         {
             _jsonSerializerSettings = jsonSerializerSettings;
             _customSchemaMappings = customSchemaMappings;
@@ -57,7 +46,6 @@ namespace Swashbuckle.Swagger
             _ignoreObsoleteProperties = ignoreObsoleteProperties;
             _describeAllEnumsAsStrings = describeAllEnumsAsStrings;
             _describeStringEnumsInCamelCase = describeStringEnumsInCamelCase;
-            _applyFiltersToAllSchemas = applyFiltersToAllSchemas;
 
             _contractResolver = jsonSerializerSettings.ContractResolver ?? new DefaultContractResolver();
             _workItems = new Dictionary<Type, WorkItem>();
@@ -95,24 +83,21 @@ namespace Swashbuckle.Swagger
             if (jsonContract is JsonPrimitiveContract)
                 return FilterSchema(CreatePrimitiveSchema((JsonPrimitiveContract)jsonContract), jsonContract);
 
-            var dictionaryContract = jsonContract as JsonDictionaryContract;
-            if (dictionaryContract != null)
-                return dictionaryContract.IsSelfReferencing()
-                    ? CreateRefSchema(type)
-                    : FilterSchema(CreateDictionarySchema(dictionaryContract), jsonContract);
+			if (jsonContract is JsonDictionaryContract dictionaryContract)
+				return dictionaryContract.IsSelfReferencing()
+					? CreateRefSchema(type)
+					: FilterSchema(CreateDictionarySchema(dictionaryContract), jsonContract);
 
-            var arrayContract = jsonContract as JsonArrayContract;
-            if (arrayContract != null)
-                return arrayContract.IsSelfReferencing()
-                    ? CreateRefSchema(type)
-                    : FilterSchema(CreateArraySchema(arrayContract), jsonContract);
+			if (jsonContract is JsonArrayContract arrayContract)
+				return arrayContract.IsSelfReferencing()
+					? CreateRefSchema(type)
+					: FilterSchema(CreateArraySchema(arrayContract), jsonContract);
 
-            var objectContract = jsonContract as JsonObjectContract;
-            if (objectContract != null && !objectContract.IsAmbiguous())
-                return CreateRefSchema(type);
+			if (jsonContract is JsonObjectContract objectContract && !objectContract.IsAmbiguous())
+				return CreateRefSchema(type);
 
-            // Fallback to abstract "object"
-            return FilterSchema(new Schema { type = "object" }, jsonContract);
+			// Fallback to abstract "object"
+			return FilterSchema(new Schema { type = "object" }, jsonContract);
         }
 
         private Schema CreateDefinitionSchema(Type type)
@@ -275,28 +260,24 @@ namespace Swashbuckle.Swagger
             return new Schema { @ref = "#/definitions/" + _workItems[type].SchemaId };
         }
 
-        private Schema FilterSchema(Schema schema, JsonContract jsonContract)
-        {
-            if (schema.type == "object" || _applyFiltersToAllSchemas)
-            {
-                var jsonObjectContract = jsonContract as JsonObjectContract;
-                if (jsonObjectContract != null)
-                {
-                    // NOTE: In next major version, _modelFilters will completely replace _schemaFilters
-                    var modelFilterContext = new ModelFilterContext(jsonObjectContract.UnderlyingType, jsonObjectContract, this);
-                    foreach (var filter in _modelFilters)
-                    {
-                        filter.Apply(schema, modelFilterContext);
-                    }
-                }
+		private Schema FilterSchema(Schema schema, JsonContract jsonContract)
+		{
+			if (jsonContract is JsonObjectContract jsonObjectContract)
+			{
+				// NOTE: In next major version, _modelFilters will completely replace _schemaFilters
+				var modelFilterContext = new ModelFilterContext(jsonObjectContract.UnderlyingType, jsonObjectContract, this);
+				foreach (var filter in _modelFilters)
+				{
+					filter.Apply(schema, modelFilterContext);
+				}
+			}
 
-                foreach (var filter in _schemaFilters)
-                {
-                    filter.Apply(schema, this, jsonContract.UnderlyingType);
-                }
-            }
+			foreach (var filter in _schemaFilters)
+			{
+				filter.Apply(schema, this, jsonContract.UnderlyingType);
+			}
 
-            return schema;
-        }
+			return schema;
+		}
     }
 }

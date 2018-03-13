@@ -1,15 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using NUnit.Framework;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
 using System.Web.Http;
 using System.Linq;
-using Swashbuckle.Application;
 using Swashbuckle.Dummy;
 using Swashbuckle.Dummy.Controllers;
 using Swashbuckle.Dummy.SwaggerExtensions;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 
 namespace Swashbuckle.Tests.Swagger
 {
@@ -17,7 +15,7 @@ namespace Swashbuckle.Tests.Swagger
     public class CoreTests : SwaggerTestBase
     {
         public CoreTests()
-            : base("swagger/docs/{apiVersion}")
+            : base("swagger/docs/{*documentName}")
         { }
 
         [SetUp]
@@ -77,7 +75,7 @@ namespace Swashbuckle.Tests.Swagger
             var basePath = swagger["basePath"];
             Assert.AreEqual("/foobar", basePath.ToString());
         }
-        
+
         [Test]
         public void It_provides_a_description_for_each_path_in_the_api()
         {
@@ -313,9 +311,11 @@ namespace Swashbuckle.Tests.Swagger
         [Test]
         public void It_exposes_config_to_include_additional_info_properties()
         {
-            SetUpHandler(c =>
+			SetUpHandlerWithoutDoc(c =>
                 {
-                    c.SingleApiVersion("v1", "Test API")
+                    c.SwaggerDoc("v1", i => i
+						.Version("v1")
+						.Title("Test API")
                         .Description("A test API")
                         .TermsOfService("Test terms")
                         .Contact(cc => cc
@@ -324,7 +324,7 @@ namespace Swashbuckle.Tests.Swagger
                             .Email("joe.test@tempuri.org"))
                         .License(lc => lc
                             .Name("Test License")
-                            .Url("http://tempuri.org/license"));
+                            .Url("http://tempuri.org/license")));
                 });
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
@@ -452,17 +452,13 @@ namespace Swashbuckle.Tests.Swagger
         public void It_exposes_config_to_describe_multiple_api_versions()
         {
             SetUpAttributeRoutesFrom(typeof(MultipleApiVersionsController).Assembly);
-            SetUpHandler(c =>
+            SetUpHandlerWithoutDoc(c =>
                 {
-                    c.MultipleApiVersions(
-                        (apiDesc, targetApiVersion) => SwaggerConfig.ResolveVersionSupportByRouteConstraint(apiDesc, targetApiVersion),
-                        (vc) =>
-                        {
-                            vc.Version("v2", "Test API V2");
-                            vc.Version("v1", "Test API V1");
-                        });
-                });
-            
+					c.DocInclusionPredicate(SwaggerConfig.ResolveVersionSupportByRouteConstraint);
+					c.SwaggerDoc("v2", "Test API V2");
+					c.SwaggerDoc("v1", "Test API V1");
+				});
+
             // 2.0
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v2");
             var info = swagger["info"];
@@ -472,9 +468,9 @@ namespace Swashbuckle.Tests.Swagger
                     title = "Test API V2",
                 });
             Assert.AreEqual(expected.ToString(), info.ToString());
-            Assert.IsNotNull(swagger["paths"]["/{apiVersion}/todos"]);
-            Assert.IsNotNull(swagger["paths"]["/{apiVersion}/todos/{id}"]);
-            
+            Assert.IsNotNull(swagger["paths"]["/{documentName}/todos"]);
+            Assert.IsNotNull(swagger["paths"]["/{documentName}/todos/{id}"]);
+
             // 1.0
             swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
             info = swagger["info"];
@@ -484,8 +480,8 @@ namespace Swashbuckle.Tests.Swagger
                     title = "Test API V1",
                 });
             Assert.AreEqual(expected.ToString(), info.ToString());
-            Assert.IsNotNull(swagger["paths"]["/{apiVersion}/todos"]);
-            Assert.IsNull(swagger["paths"]["/{apiVersion}/todos/{id}"]);
+            Assert.IsNotNull(swagger["paths"]["/{documentName}/todos"]);
+            Assert.IsNull(swagger["paths"]["/{documentName}/todos/{id}"]);
         }
 
         [Test]
@@ -504,10 +500,10 @@ namespace Swashbuckle.Tests.Swagger
         public void It_handles_additional_route_parameters()
         {
             // i.e. route params that are not included in the action signature
-            SetUpCustomRouteFor<ProductsController>("{apiVersion}/products");
+            SetUpCustomRouteFor<ProductsController>("{documentName}/products");
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
-            var getParams = swagger["paths"]["/{apiVersion}/products"]["get"]["parameters"];
+            var getParams = swagger["paths"]["/{documentName}/products"]["get"]["parameters"];
 
             var expected = JArray.FromObject(new object[]
                 {
@@ -522,7 +518,7 @@ namespace Swashbuckle.Tests.Swagger
                     },
                     new
                     {
-                        name = "apiVersion",
+                        name = "documentName",
                         @in = "path",
                         required = true,
                         type = "string",

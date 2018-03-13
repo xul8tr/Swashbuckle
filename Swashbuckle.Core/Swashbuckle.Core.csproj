@@ -81,7 +81,6 @@
     <Compile Include="Application\SwaggerUiConfig.cs" />
     <Compile Include="Application\SwaggerUiHandler.cs" />
     <Compile Include="Application\SwaggerDocsHandler.cs" />
-    <Compile Include="Application\VersionInfoBuilder.cs" />
     <Compile Include="Application\LicenseBuilder.cs" />
     <Compile Include="Application\ContactBuilder.cs" />
     <Compile Include="Application\InfoBuilder.cs" />

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Web.Http;
-using Newtonsoft.Json.Serialization;
-using Swashbuckle.Application;
 using System.Net.Http;
 using System.Collections.Generic;
 using System.Web.Http.Routing;
@@ -12,7 +10,7 @@ namespace Swashbuckle.Application
 {
     public static class HttpConfigurationExtensions
     {
-        private static readonly string DefaultRouteTemplate = "swagger/docs/{apiVersion}";
+        private static readonly string DefaultRouteTemplate = "swagger/docs/{*documentName}";
 
         public static SwaggerEnabledConfiguration EnableSwagger(
             this HttpConfiguration httpConfig,
@@ -27,20 +25,20 @@ namespace Swashbuckle.Application
             Action<SwaggerDocsConfig> configure = null)
         {
             var config = new SwaggerDocsConfig();
-            if (configure != null) configure(config);
+			configure?.Invoke(config);
 
-            httpConfig.Routes.MapHttpRoute(
+			httpConfig.Routes.MapHttpRoute(
                 name: "swagger_docs" + routeTemplate,
                 routeTemplate: routeTemplate,
                 defaults: null,
-                constraints: new { apiVersion = @".+" },
+                constraints: new { documentName = @".+" },
                 handler: new SwaggerDocsHandler(config)
             );
 
             return new SwaggerEnabledConfiguration(
                 httpConfig,
                 config.GetRootUrl,
-                config.GetApiVersions().Select(version => routeTemplate.Replace("{apiVersion}", version)));
+                config.GetSwaggerDocs().Select(doc => routeTemplate.Replace("{*documentName}", doc.Key)));
         }
 
         internal static JsonSerializerSettings SerializerSettingsOrDefault(this HttpConfiguration httpConfig)
@@ -81,9 +79,9 @@ namespace Swashbuckle.Application
             Action<SwaggerUiConfig> configure = null)
         {
             var config = new SwaggerUiConfig(_discoveryPaths, _rootUrlResolver);
-            if (configure != null) configure(config);
+			configure?.Invoke(config);
 
-            _httpConfig.Routes.MapHttpRoute(
+			_httpConfig.Routes.MapHttpRoute(
                 name: "swagger_ui" + routeTemplate,
                 routeTemplate: routeTemplate,
                 defaults: null,

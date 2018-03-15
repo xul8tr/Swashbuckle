@@ -485,6 +485,46 @@ namespace Swashbuckle.Tests.Swagger
         }
 
         [Test]
+        public void It_handles_documentName_containing_slash_for_sub_apis()
+        {
+            SetUpAttributeRoutesFrom(typeof(MultipleApiVersionsController).Assembly);
+            SetUpHandlerWithoutDoc(c =>
+            {
+                c.DocInclusionPredicate(SwaggerConfig.ResolveVersionSupportByRouteConstraint);
+                c.SwaggerDoc("MainApi/v2", i => i
+                    .Version("v2")
+                    .Title("Main API V2"));
+                c.SwaggerDoc("SubApi/v1", i => i
+                    .Version("v1")
+                    .Title("Sub API V1"));
+            });
+
+            // 2.0
+            var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/MainApi/v2");
+            var info = swagger["info"];
+            var expected = JObject.FromObject(new
+            {
+                version = "v2",
+                title = "Main API V2",
+            });
+            Assert.AreEqual(expected.ToString(), info.ToString());
+            Assert.IsNotNull(swagger["paths"]["/{documentName}/todos"]);
+            Assert.IsNotNull(swagger["paths"]["/{documentName}/todos/{id}"]);
+
+            // 1.0
+            swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/SubApi/v1");
+            info = swagger["info"];
+            expected = JObject.FromObject(new
+            {
+                version = "v1",
+                title = "Sub API V1",
+            });
+            Assert.AreEqual(expected.ToString(), info.ToString());
+            Assert.IsNotNull(swagger["paths"]["/{documentName}/todos"]);
+            Assert.IsNull(swagger["paths"]["/{documentName}/todos/{id}"]);
+        }
+
+        [Test]
         public void It_exposes_config_to_workaround_multiple_actions_with_same_path_and_method()
         {
             SetUpDefaultRouteFor<ConflictingActionsController>();

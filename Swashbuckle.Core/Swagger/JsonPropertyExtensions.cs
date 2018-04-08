@@ -29,16 +29,7 @@ namespace Swashbuckle.Swagger
         {
             if (jsonProperty.UnderlyingName == null) return null;
 
-#if DotNetFull
-            var metadata = jsonProperty.DeclaringType.GetCustomAttributes(typeof(MetadataTypeAttribute), true)
-                .FirstOrDefault();
-
-            var typeToReflect = (metadata != null)
-                ? ((MetadataTypeAttribute)metadata).MetadataClassType
-                : jsonProperty.DeclaringType;
-#else
             var typeToReflect = jsonProperty.DeclaringType;
-#endif
 
             return typeToReflect.GetProperty(jsonProperty.UnderlyingName, jsonProperty.PropertyType);
         }

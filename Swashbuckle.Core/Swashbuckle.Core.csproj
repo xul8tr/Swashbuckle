@@ -1,15 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">DotNetCore</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'net461' ">DotNetFull</DefineConstants>
+    <TargetFramework>net461</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Swashbuckle.Core.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
     <RootNamespace>Swashbuckle</RootNamespace>
     <PackageId>Bit.Swashbuckle.Core</PackageId>
-    <Version>5.6.2</Version>
+    <Version>5.6.3</Version>
     <Title>Swashbuckle.Core - Swagger for WebApi</Title>
     <Authors>Richard Morris</Authors>
     <Description>Seamlessly adds a Swagger to WebApi projects!</Description>

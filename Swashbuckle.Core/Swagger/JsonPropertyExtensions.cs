@@ -22,19 +22,23 @@ namespace Swashbuckle.Swagger
         public static bool HasAttribute<T>(this JsonProperty jsonProperty)
         {
             var propInfo = jsonProperty.PropertyInfo();
-            return propInfo != null && Attribute.IsDefined(propInfo, typeof (T));
+            return propInfo != null && Attribute.IsDefined(propInfo, typeof(T));
         }
 
         public static PropertyInfo PropertyInfo(this JsonProperty jsonProperty)
         {
             if (jsonProperty.UnderlyingName == null) return null;
 
+#if DotNetFull
             var metadata = jsonProperty.DeclaringType.GetCustomAttributes(typeof(MetadataTypeAttribute), true)
                 .FirstOrDefault();
 
             var typeToReflect = (metadata != null)
                 ? ((MetadataTypeAttribute)metadata).MetadataClassType
                 : jsonProperty.DeclaringType;
+#else
+            var typeToReflect = jsonProperty.DeclaringType;
+#endif
 
             return typeToReflect.GetProperty(jsonProperty.UnderlyingName, jsonProperty.PropertyType);
         }

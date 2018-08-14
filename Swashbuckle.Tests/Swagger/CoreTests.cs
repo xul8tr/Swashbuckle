@@ -492,7 +492,7 @@ namespace Swashbuckle.Tests.Swagger
         public void It_exposes_config_to_workaround_multiple_actions_with_same_path_and_method()
         {
             SetUpDefaultRouteFor<ConflictingActionsController>();
-            SetUpHandler(c => c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First()));
+            SetUpHandler(c => c.ResolveConflictingActions((info, apiDescriptions) => apiDescriptions.First()));
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
             var operations = swagger["paths"]["/conflictingactions"];

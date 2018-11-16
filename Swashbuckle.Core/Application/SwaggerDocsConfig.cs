@@ -304,7 +304,7 @@ namespace Swashbuckle.Application
         public static string DefaultRootUrlResolver(HttpRequestMessage request)
         {
             var scheme = GetHeaderValue(request, "X-Forwarded-Proto") ?? request.RequestUri.Scheme;
-            var host = GetHeaderValue(request, "X-Forwarded-Host") ?? request.RequestUri.Host;
+            var host = (GetHeaderValue(request, "X-Forwarded-Host") ?? request.RequestUri.Host).Split(':')[0];
             var port = GetHeaderValue(request, "X-Forwarded-Port") ?? request.RequestUri.Port.ToString(CultureInfo.InvariantCulture);
             var prefix = GetHeaderValue(request, "X-Forwarded-Prefix") ?? string.Empty;
 

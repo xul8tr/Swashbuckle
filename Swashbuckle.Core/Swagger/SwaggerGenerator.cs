@@ -51,7 +51,7 @@ namespace Swashbuckle.Swagger
                 .Where(apiDesc => !(_options.IgnoreObsoleteActions && apiDesc.IsObsolete()))
                 .OrderBy(_options.GroupingKeySelector, _options.GroupingKeyComparer)
                 .GroupBy(apiDesc => apiDesc.RelativePathSansQueryString())
-                .ToDictionary(group => "/" + group.Key, group => CreatePathItem(group, schemaRegistry));
+                .ToDictionary(group => "/" + group.Key, group => CreatePathItem(info, group, schemaRegistry));
 
             var rootUri = new Uri(rootUrl);
             var port = (!rootUri.IsDefaultPort) ? ":" + rootUri.Port : string.Empty;
@@ -82,7 +82,7 @@ namespace Swashbuckle.Swagger
                 : _apiExplorer.ApiDescriptions.Where(apiDesc => _options.VersionSupportResolver(apiDesc, apiVersion));
         }
 
-        private PathItem CreatePathItem(IEnumerable<ApiDescription> apiDescriptions, SchemaRegistry schemaRegistry)
+        private PathItem CreatePathItem(Info info, IEnumerable<ApiDescription> apiDescriptions, SchemaRegistry schemaRegistry)
         {
             var pathItem = new PathItem();
 
@@ -96,7 +96,7 @@ namespace Swashbuckle.Swagger
 
                 var apiDescription = (group.Count() == 1)
                     ? group.First()
-                    : _options.ConflictingActionsResolver(group);
+                    : _options.ConflictingActionsResolver(info, group);
 
                 switch (httpMethod)
                 {

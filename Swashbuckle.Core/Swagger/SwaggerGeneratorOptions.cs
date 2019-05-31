@@ -24,7 +24,7 @@ namespace Swashbuckle.Swagger
             bool applyFiltersToAllSchemas = false,
             IEnumerable<IOperationFilter> operationFilters = null,
             IEnumerable<IDocumentFilter> documentFilters = null,
-            Func<IEnumerable<ApiDescription>, ApiDescription> conflictingActionsResolver = null
+            Func<Info, IEnumerable<ApiDescription>, ApiDescription> conflictingActionsResolver = null
             )
         {
             VersionSupportResolver = versionSupportResolver;
@@ -78,7 +78,7 @@ namespace Swashbuckle.Swagger
 
         public IEnumerable<IDocumentFilter> DocumentFilters { get; private set; }
 
-        public Func<IEnumerable<ApiDescription>, ApiDescription> ConflictingActionsResolver { get; private set; }
+        public Func<Info, IEnumerable<ApiDescription>, ApiDescription> ConflictingActionsResolver { get; private set; }
 
         private string DefaultGroupingKeySelector(ApiDescription apiDescription)
         {
@@ -90,7 +90,7 @@ namespace Swashbuckle.Swagger
             return type.FriendlyId();
         }
 
-        private ApiDescription DefaultConflictingActionsResolver(IEnumerable<ApiDescription> apiDescriptions)
+        private ApiDescription DefaultConflictingActionsResolver(Info info, IEnumerable<ApiDescription> apiDescriptions)
         {
             var first = apiDescriptions.First();
             throw new NotSupportedException(String.Format(

@@ -35,7 +35,7 @@ namespace Swashbuckle.Application
         private readonly IList<Func<IOperationFilter>> _operationFilters;
         private readonly IList<Func<IDocumentFilter>> _documentFilters;
         private readonly IList<Func<XPathDocument>> _xmlDocFactories;
-        private Func<IEnumerable<ApiDescription>, ApiDescription> _conflictingActionsResolver;
+        private Func<Info, IEnumerable<ApiDescription>, ApiDescription> _conflictingActionsResolver;
         private Func<HttpRequestMessage, string> _rootUrlResolver;
 
         private Func<ISwaggerProvider, ISwaggerProvider> _customProviderFactory;
@@ -221,7 +221,7 @@ namespace Swashbuckle.Application
             _xmlDocFactories.Add(() => new XPathDocument(filePath));
         }
 
-        public void ResolveConflictingActions(Func<IEnumerable<ApiDescription>, ApiDescription> conflictingActionsResolver)
+        public void ResolveConflictingActions(Func<Info, IEnumerable<ApiDescription>, ApiDescription> conflictingActionsResolver)
         {
             _conflictingActionsResolver = conflictingActionsResolver;
         }
